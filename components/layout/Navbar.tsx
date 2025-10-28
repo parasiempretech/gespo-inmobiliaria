@@ -1,12 +1,16 @@
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Phone } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
-const nav = [
+/* =========================================================
+   Enlaces de navegación
+   ========================================================= */
+const NAV_LINKS = [
   { href: "/lotes", label: "LOTES" },
   { href: "/ventas", label: "VENTAS" },
   { href: "/alquileres", label: "ALQUILERES" },
@@ -17,66 +21,94 @@ const nav = [
 ];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
-  // Cierra el menú al cambiar de página
+  /* Cierra al cambiar de ruta */
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  const activeLinkClass =
-    "text-brand-orange dark:text-orange-400 font-semibold";
-  const defaultLinkClass =
-    "text-neutral-700 dark:text-neutral-200 hover:text-brand-orange dark:hover:text-orange-400";
+  /* Bloqueo de scroll del documento mientras el menú está abierto */
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
+    if (open) {
+      const scrollY = window.scrollY;
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      html.style.overflow = "hidden";
+      return () => {
+        const y = body.style.top;
+        body.style.position = "";
+        body.style.top = "";
+        body.style.left = "";
+        body.style.right = "";
+        html.style.overflow = "";
+        if (y) window.scrollTo(0, parseInt(y || "0") * -1);
+      };
+    }
+  }, [open]);
+
+  /* Cerrar con ESC */
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setOpen(false);
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onKeyDown]);
+
+  /* Estilos de links */
+  const active =
+    "text-white font-extrabold drop-shadow-sm relative after:content-[''] after:absolute after:-bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-[2px] after:w-10 after:bg-white after:rounded-full";
+  const idle = "text-white/90 hover:text-white transition-colors";
 
   return (
-    <header
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 backdrop-blur-md
-      bg-white/90 dark:bg-neutral-950/90 border-b border-neutral-200 dark:border-neutral-800 shadow-md`}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 sm:px-6 lg:px-8">
-        {/* LOGO */}
+    <header className="fixed top-0 left-0 z-50 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+        {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 sm:gap-3 transition-transform duration-300 hover:scale-105"
           aria-label="Ir a la página de inicio de GESPO Inmobiliaria"
+          className="flex items-center gap-3 hover:scale-[1.03] transition-transform"
         >
           <Image
             src="/logo-gespo.png"
-            alt="GESPO Logo"
+            alt="Logo GESPO"
             width={40}
             height={40}
-            className="rounded-full ring-2 ring-brand-orange/50"
+            className="rounded-full ring-2 ring-brand-orange/60 shadow-md"
             priority
           />
-          {/* Título responsivo, siempre apilado */}
-          <div className="flex flex-col leading-tight">
-            <span className="font-extrabold text-[14px] sm:text-[15px] text-neutral-900 dark:text-white">
+          <div className="leading-tight">
+            <p className="text-[14px] sm:text-[15px] font-extrabold text-neutral-900 dark:text-white">
               GESPO
-            </span>
-            <span className="font-extrabold text-[12px] sm:text-[13px] text-brand-orange tracking-tight">
+            </p>
+            <p className="text-[12px] sm:text-[13px] font-extrabold text-brand-orange tracking-tight">
               INMOBILIARIA
-            </span>
+            </p>
           </div>
         </Link>
 
-        {/* BOTONES DERECHA */}
+        {/* Acciones derecha (hamburguesa fija + tema) */}
         <div className="flex items-center gap-3">
           <ThemeToggle />
-
-          {/* Botón hamburguesa SIEMPRE visible */}
           <button
+            onClick={() => setOpen((v) => !v)}
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
             className="p-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
-            onClick={() => setOpen(!open)}
           >
             {open ? (
-              <X size={24} className="text-neutral-900 dark:text-neutral-50" />
+              <X size={22} className="text-neutral-900 dark:text-neutral-50" />
             ) : (
               <Menu
-                size={24}
+                size={22}
                 className="text-neutral-900 dark:text-neutral-50"
               />
             )}
@@ -84,40 +116,49 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* MENÚ DESPLEGABLE */}
+      {/* Overlay FULLSCREEN naranja sólido (sin transparencia) */}
       <div
-        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+        className={`fixed inset-0 z-[60] transition-all duration-250 ${
           open
-            ? "max-h-[500px] opacity-100 border-t border-neutral-200 dark:border-neutral-800"
-            : "max-h-0 opacity-0 border-t-0"
-        } bg-white/95 dark:bg-neutral-900/95 backdrop-blur-sm shadow-xl`}
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+        aria-hidden={!open}
       >
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex flex-col gap-3">
-          {nav.map((item) => (
+        {/* Fondo naranja sólido: usa tu color de marca */}
+        {/* Asegurate de tener bg-brand-orange en tailwind.config; si no, reemplazá por bg-[#f36c21] */}
+        <div className="absolute inset-0 bg-brand-orange" />
+
+        {/* Contenido del menú */}
+        <div
+          className="relative z-10 flex min-h-screen flex-col items-center justify-center gap-5 px-6 text-center"
+          role="dialog"
+          aria-modal="true"
+        >
+          {NAV_LINKS.map((link) => (
             <Link
-              key={item.href}
-              href={item.href}
+              key={link.href}
+              href={link.href}
               onClick={() => setOpen(false)}
-              className={`py-2 px-3 uppercase font-semibold text-lg rounded-lg transition-colors duration-200 ${
-                pathname === item.href
-                  ? `${activeLinkClass} bg-neutral-100 dark:bg-neutral-800`
-                  : `${defaultLinkClass} hover:bg-neutral-50 dark:hover:bg-neutral-800`
+              className={`text-2xl sm:text-3xl uppercase tracking-wide px-5 py-2 rounded-lg transition-all duration-200 will-change-transform hover:scale-[1.03] ${
+                pathname === link.href ? active : idle
               }`}
             >
-              {item.label}
+              {link.label}
             </Link>
           ))}
 
-          {/* BOTÓN WHATSAPP */}
-          <a
-            href="https://wa.me/5493885177508"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 mt-4 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-lg transition-all shadow-md hover:shadow-lg active:scale-95"
+          {/* Botón cerrar */}
+          <button
+            onClick={() => setOpen(false)}
+            aria-label="Cerrar menú"
+            className="absolute top-6 right-6 text-white/95 hover:text-white transition-transform hover:scale-110"
           >
-            <Phone size={20} />
-            WhatsApp
-          </a>
+            <X size={30} />
+          </button>
+
+          {/* Línea decorativa inferior */}
+          <div className="pointer-events-none absolute bottom-0 left-0 h-[3px] w-full bg-white/80" />
         </div>
       </div>
     </header>

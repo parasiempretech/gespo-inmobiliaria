@@ -38,6 +38,9 @@
     line-height: 1.6;
     word-wrap: break-word;
     overflow-x: hidden; /* 🔒 evita desbordes horizontales */
+
+    /* ✅ Solución universal: deja espacio para el Navbar fijo */
+    padding-top: 72px; /* altura real aproximada del header */
   }
 
   a {
@@ -51,6 +54,12 @@
 
   section {
     @apply w-full overflow-hidden;
+  }
+
+  /* ✅ Ajuste para navegación con anclas o scroll interno */
+  main,
+  section:first-of-type {
+    scroll-margin-top: 6rem; /* evita que los títulos queden tapados */
   }
 }
 

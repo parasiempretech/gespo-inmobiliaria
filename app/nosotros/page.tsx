@@ -7,12 +7,6 @@
  * - Bloque “¿Quiénes somos?” con imagen grande y efecto 3D + zoom al hover
  * - Servicios con micro-interacciones sutiles
  * - Visítanos/Contacto con Google Maps embebido y contraste alto
- *
- * Notas:
- * - Contenido literal provisto por el usuario (no se inventa nada)
- * - Tailwind con clases válidas (sin clases dinámicas tipo text-[...])
- * - Sin AnimatePresence para evitar sobrecarga; todo es scroll-based
- * - Preparado para Next.js 14 (App Router) y Tailwind 3+
  */
 
 import React, { useRef, useState, useCallback } from "react";
@@ -30,7 +24,6 @@ import {
 
 /* ============================================================
    Helpers de animación (scroll reveal)
-   - Usamos las mismas transiciones para consistencia visual
    ============================================================ */
 const fadeUp = {
   initial: { opacity: 0, y: 28 },
@@ -43,14 +36,11 @@ const fadeUpSlow = {
 };
 
 /* ============================================================
-   Componente de Imagen con efecto Tilt + Zoom (sin librerías)
-   - Hover 3D realista + zoom suave
-   - Sincrónico con el mouse, performante y sin jank
-   - Usa background-image para evitar errores si falta el archivo
+   Imagen con efecto Tilt + Zoom
    ============================================================ */
 function ImageTiltZoom({
-  src = "/images/nosotros.jpg", // Reemplazá con tu ruta real
-  alt = "Imagen institucional GESP",
+  src = "/images/nosotros.jpg",
+  alt = "Imagen institucional GESPO",
 }: {
   src?: string;
   alt?: string;
@@ -63,19 +53,13 @@ function ImageTiltZoom({
   const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el) return;
-
     const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left; // pos X dentro del elemento
-    const y = e.clientY - rect.top; // pos Y dentro del elemento
-
-    // Normalizamos a rango [-1, 1]
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     const px = (x / rect.width) * 2 - 1;
     const py = (y / rect.height) * 2 - 1;
-
-    // Límites suaves de rotación
-    const rotX = (py * -8).toFixed(2); // arriba/abajo
-    const rotY = (px * 8).toFixed(2); // izq/der
-
+    const rotX = (py * -8).toFixed(2);
+    const rotY = (px * 8).toFixed(2);
     setTransform(
       `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.03)`
     );
@@ -98,7 +82,6 @@ function ImageTiltZoom({
       }}
       aria-label={alt}
     >
-      {/* Imagen como background: robusto ante rutas faltantes */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
@@ -106,9 +89,7 @@ function ImageTiltZoom({
           transform: "translateZ(0.1px)",
         }}
       />
-      {/* Overlay sutil para legibilidad */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent pointer-events-none" />
-      {/* Glow radial al hover */}
       <div className="absolute -inset-8 opacity-0 hover:opacity-20 transition-opacity duration-500 bg-[radial-gradient(ellipse_at_center,rgba(243,108,33,0.25),transparent_60%)]" />
     </div>
   );
@@ -122,18 +103,15 @@ export default function NosotrosPage() {
     <main className="bg-gradient-to-b from-white to-neutral-50 text-neutral-800 scroll-smooth">
       {/* ===================== HERO ===================== */}
       <section className="relative overflow-hidden py-24 md:py-32">
-        {/* Fondo institucional (imagen + overlay para contraste) */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[url('/images/oficina-gesp.jpg')] bg-cover bg-center opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[url('/images/oficina-gespo.jpg')] bg-cover bg-center opacity-[0.08]" />
           <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/95 to-white" />
         </div>
-        {/* Auroras/halos suaves de color marca */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[28rem] h-[28rem] bg-brand-orange/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-0 right-1/3 w-[28rem] h-[28rem] bg-orange-400/10 rounded-full blur-3xl animate-pulse" />
         </div>
 
-        {/* Contenido del hero con reveal suave */}
         <motion.div
           {...fadeUp}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -141,7 +119,7 @@ export default function NosotrosPage() {
           className="relative z-10 max-w-5xl mx-auto text-center px-6"
         >
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight text-neutral-900">
-            GESP <span className="text-brand-orange">Inmobiliaria</span> &
+            GESPO <span className="text-brand-orange">Inmobiliaria</span> &
             Constructora
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-neutral-600 leading-relaxed max-w-3xl mx-auto">
@@ -152,16 +130,14 @@ export default function NosotrosPage() {
         </motion.div>
       </section>
 
-      {/* ===================== ¿QUIÉNES SOMOS? (texto literal + imagen con efecto) ===================== */}
+      {/* ===================== ¿QUIÉNES SOMOS? ===================== */}
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-6xl px-6 grid lg:grid-cols-2 gap-12 items-start">
-          {/* Columna de texto (todo literal, sin modificar) */}
           <motion.div
             {...fadeUpSlow}
             transition={{ duration: 0.6, ease: "easeOut" }}
             viewport={{ once: true }}
           >
-            {/* Título con shimmer (gradiente animado muy sutil) */}
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               <motion.span
                 className="bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 via-neutral-700 to-neutral-900"
@@ -174,7 +150,6 @@ export default function NosotrosPage() {
               </motion.span>
             </h2>
 
-            {/* Texto EXACTO provisto por vos */}
             <div className="mt-6 space-y-4 text-neutral-700 leading-relaxed">
               <p>
                 GESPO INMOBILIARIA I CONSTRUCTORA, es una empresa jujeña con
@@ -190,7 +165,7 @@ export default function NosotrosPage() {
               </p>
               <p>
                 En el año 2021, junto a la Martillera Publica Luz M. Castillo,
-                dimos un paso mas allá. Al ver la realidad de numerosas familias
+                dimos un paso más allá. Al ver la realidad de numerosas familias
                 de la provincia, que soñaban con tener su propio hogar y se
                 enfrentaban a la escasa oferta de viviendas, a la falta de
                 opciones accesibles, sentimos la necesidad de transformar esta
@@ -202,7 +177,7 @@ export default function NosotrosPage() {
                 que como familia también soñamos.
               </p>
               <p>
-                Fue así como, impulsados por la capacitación constate, la
+                Fue así como, impulsados por la capacitación constante, la
                 planificación estratégica, y una profunda vocación de servicio,
                 nació una nueva línea dentro de nuestra empresa: CONSTRUCTORA.
               </p>
@@ -210,29 +185,27 @@ export default function NosotrosPage() {
                 Desde entonces trabajamos con pasión en el desarrollo de
                 proyectos habitacionales, refacciones, ampliaciones, y
                 construcción de locales comerciales, ofreciendo un servicio
-                integral donde acompañamos personalmente en profundo apoyo a
-                cada cliente, desde el inicio de la acción: toma de decisiones,
-                en su elección de proyecto, modificaciones, planos,
-                modificaciones y en cada etapa de este importante proceso.
+                integral donde acompañamos personalmente a cada cliente, desde
+                el inicio de la acción: toma de decisiones, elección de
+                proyecto, planos y cada etapa de este importante proceso.
               </p>
               <p>
-                Porque para GESPO, lo mas importante es la satisfacción de
+                Porque para GESPO, lo más importante es la satisfacción de
                 nuestros clientes.
               </p>
               <p>
                 En la actualidad contamos con más de 10 tipologías de viviendas,
                 planes de financiación a medida y soluciones diseñadas para que
-                cada vez mas familias puedan cumplir el sueño de tener su casa
+                cada vez más familias puedan cumplir el sueño de tener su casa
                 propia.
               </p>
               <p className="font-semibold text-neutral-900">
-                EN GESPO CONSTRUIMOS MAS QUE VIVIENDAS: CONSTRUIMOS FUTUROS,
+                EN GESPO CONSTRUIMOS MÁS QUE VIVIENDAS: CONSTRUIMOS FUTUROS,
                 CONSTRUIMOS ESPERANZA.
               </p>
             </div>
           </motion.div>
 
-          {/* Columna de imagen con efecto 3D + zoom */}
           <motion.div
             {...fadeUpSlow}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
@@ -240,9 +213,9 @@ export default function NosotrosPage() {
           >
             <ImageTiltZoom
               src="/images/nosotros.jpg"
-              alt="Equipo y obra GESP"
+              alt="Equipo y obra GESPO"
             />
-            <p className="sr-only">Imagen institucional de GESP.</p>
+            <p className="sr-only">Imagen institucional de GESPO.</p>
           </motion.div>
         </div>
       </section>
@@ -269,7 +242,6 @@ export default function NosotrosPage() {
             diseño, rentabilidad y una ejecución impecable.
           </motion.p>
 
-          {/* Grid con microinteracciones y reveal progresivo */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {[
               {
@@ -315,10 +287,9 @@ export default function NosotrosPage() {
         </div>
       </section>
 
-      {/* ===================== VISÍTANOS / CONTACTO + MAPA ===================== */}
+      {/* ===================== VISÍTANOS / CONTACTO ===================== */}
       <section className="py-0">
         <div className="grid lg:grid-cols-2">
-          {/* Panel de contacto en contraste alto (oscuro) */}
           <div className="bg-neutral-950 text-white px-6 py-16 md:py-24 flex items-center">
             <div className="w-full max-w-xl mx-auto text-center">
               <h2 className="text-3xl font-extrabold tracking-tight text-brand-orange mb-6">
@@ -367,16 +338,15 @@ export default function NosotrosPage() {
               </div>
 
               <p className="mt-10 text-neutral-400 text-sm">
-                © {new Date().getFullYear()} GESP Inmobiliaria & Constructora —
+                © {new Date().getFullYear()} GESPO Inmobiliaria & Constructora —
                 Todos los derechos reservados.
               </p>
             </div>
           </div>
 
-          {/* Google Maps embebido (interactivo y liviano) */}
           <div className="min-h-[420px] md:min-h-[520px]">
             <iframe
-              title="Ubicación GESP - Salta 1031, San Salvador de Jujuy"
+              title="Ubicación GESPO - Salta 1031, San Salvador de Jujuy"
               src="https://www.google.com/maps?q=Salta%201031,%20San%20Salvador%20de%20Jujuy&output=embed"
               className="w-full h-full border-0"
               loading="lazy"
